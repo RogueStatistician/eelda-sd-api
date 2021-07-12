@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import utils as ut
+from . import utils as ut
 import flask
 from flask import request, jsonify
 import pandas as pd
