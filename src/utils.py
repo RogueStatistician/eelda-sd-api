@@ -42,8 +42,8 @@ class Pokemon:
         self.happiness = int(values[11]) if values[11] != '' else \
             self.happiness
         command = "grep -n '"+self.species+":' -A 5 ../pokemon-showdown-test/data/pokedex.ts | grep \"types\""    
-        types = subprocess.check_output(command, shell=True)
-        self.types = re.search('\[(.*?)\]',types).group(1).replace('"','').split(',')
+        types = subprocess.check_output(command, shell=True).decode('utf-8')
+        self.types = re.search('\[(.*?)\]',types).group(1).replace('"','').lower().split(',')
         
         
 
