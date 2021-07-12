@@ -121,9 +121,7 @@ def validate(user=None, game_format=None):
                 to_return = {'message': response}
     return jsonify(to_return), code
     '''
-    print('aaaaa')
     options = json.loads(request.data)
-    print('bbbb')
     options['user']=user
     return validator.handler(game_format,options)
 

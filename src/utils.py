@@ -6,7 +6,8 @@ import ntpath
 import datetime
 import json
 import requests
-
+import subprocess
+import re
 
 class Pokemon:
     name = ''
@@ -26,7 +27,7 @@ class Pokemon:
     def __init__(self, mon):
         values = mon.split('|')
         self.name = values[0]
-        self.species = values[1] if not values[1] == '' else values[0]
+        self.species = values[1] if not values[1] == '' else values[0].replace(' ','').replace('-','').lower()
         self.item = values[2]
         self.ability = values[3]
         self.moves = values[4].split(',')
@@ -40,13 +41,10 @@ class Pokemon:
         self.level = int(values[10]) if values[10] != '' else self.level
         self.happiness = int(values[11]) if values[11] != '' else \
             self.happiness
+        command = "grep -n '"+self.species+":' -A 5 ../pokemon-showdown/data/pokedex.ts | grep \"types\""    
+        types = subprocess.check_output(command, shell=True)
+        self.types = re.search('\[(.*?)\]',types).group(1).replace('"','').split(',')
         
-        #types = requests.get(
-        #'https://app.pokemon-api.xyz/pokemon/'+self.species.lower().replace(' ','')).json()
-        #print(types['types'])
-        #self.types=[]
-        #for type in types['types']:
-        #    self.types.append(type['type']['name'])
         
 
     def __str__(self):
