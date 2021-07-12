@@ -11,9 +11,9 @@ import requests
 import src.validator as validator
 app = flask.Flask(__name__)
 #app.config["DEBUG"] = True
-host = "localhost"
+host = "0.0.0.0"
 port = 8081
-data = '../pokemon-showdown/config/ladders/'
+data = '../pokemon-showdown-test/config/ladders/'
 
 
 @app.route('/users/', defaults={'user': None})

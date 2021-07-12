@@ -83,8 +83,8 @@ def oueelda(options):
     return to_return,code
 
 dispatcher = {
-    u'eeldavgc2021eelda': vgceelda,
-    u'eeldavgc2021eelda': oueelda,
+    u'gen8eeldasvgc2021series10': vgceelda,
+    u'gen8eeldasou': oueelda,
 
 }
 
