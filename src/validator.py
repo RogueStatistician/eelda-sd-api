@@ -29,7 +29,7 @@ def is_user_eelda(user_data):
     to_return = {'message':'ok'}
     if not user_data['ou'] or not user_data['vgc']:
         code = 403
-        to_return = {'message':'Utente '+user_data['username']+' non partecipa alla Eelda\'s League. Iscriviti su http://eeldasleague.it'}    
+        to_return = {'message':'Utente '+user_data['showdown_name']+' non partecipa alla Eelda\'s League. Iscriviti su http://eeldasleague.it'}    
     return to_return,code
 
 def check_gym_leader(user_data,team):
@@ -58,15 +58,16 @@ def vgceelda(options):
     user_data = get_user_data(user)
     to_return,code = is_user_eelda(user_data)
     response=''
-    if not user_data['gym']:
-        for mon in team:
-            if mon.species not in user_data['ou'] or mon.species not in user_data['vgc']:
-                response = response+mon.species +\
-                    ' non presente nella tua scheda allenatore.\n'
-                code = 403
-                to_return = {'message': response}
-    else:
-        to_return,code = check_gym_leader(user_data,team)
+    if code != 403:
+        if not user_data['gym']:
+            for mon in team:
+                if mon.species not in user_data['ou'] and mon.species not in user_data['vgc']:
+                    response = response+mon.name +\
+                        ' non presente nella tua scheda allenatore.\n'
+                    code = 403
+                    to_return = {'message': response}
+        else:
+            to_return,code = check_gym_leader(user_data,team)
     return to_return,code
 
 def oueelda(options):
@@ -75,15 +76,16 @@ def oueelda(options):
     user_data = get_user_data(user)
     to_return,code = is_user_eelda(user_data)
     response=''
-    if not user_data['gym']:
-        for mon in team:
-            if mon.species not in user_data['ou']:
-                response = response+mon.species +\
-                    ' non presente nel gruppo 1 della tua scheda allenatore.\n'
-                code = 403
-                to_return = {'message': response}
-    else:
-        to_return,code = check_gym_leader(user_data,team)
+    if code != 403:
+        if not user_data['gym']:
+            for mon in team:
+                if mon.species not in user_data['ou']:
+                    response = response+mon.name +\
+                        ' non presente nel gruppo 1 della tua scheda allenatore.\n'
+                    code = 403
+                    to_return = {'message': response}
+        else:
+            to_return,code = check_gym_leader(user_data,team)
     return to_return,code
 
 dispatcher = {
