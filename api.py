@@ -13,7 +13,7 @@ app = flask.Flask(__name__)
 #app.config["DEBUG"] = True
 host = "0.0.0.0"
 port = 8081
-data = '../pokemon-showdown-test/config/ladders/'
+data = '../pokemon-showdown/config/ladders/'
 
 
 @app.route('/users/', defaults={'user': None})
@@ -125,9 +125,6 @@ def validate(user=None, game_format=None):
     options['user']=user
     return validator.handler(game_format,options)
 
-@app.route('/foo')
-def foobar():
-    return jsonify(validator.foo()),200
 
 if __name__ == '__main__':
     import logging

@@ -18,14 +18,16 @@ def get_user_data(user):
     user_data = requests.get(
         'https://eeldasleague.it/wp-json/eelda/v1/trainer/'+user)
     user_data = user_data.json()
-    user_data['ou'] = [a.lower().replace(' ','').replace('-','') for a in user_data['ou']]
-    user_data['vgc'] = [a.lower().replace(' ','').replace('-','') for a in user_data['vgc']]
+    if user_data['ou']:
+        user_data['ou'] = [a.lower().replace(' ','').replace('-','') for a in user_data['ou']]
+    if user_data['vgc']:
+        user_data['vgc'] = [a.lower().replace(' ','').replace('-','') for a in user_data['vgc']]
     return user_data
 
 def is_user_eelda(user_data):
     code = 200
     to_return = {'message':'ok'}
-    if user_data['ou']==False or user_data['vgc']==False:
+    if not user_data['ou'] or not user_data['vgc']:
         code = 403
         to_return = {'message':'Utente '+user_data['username']+' non partecipa alla Eelda\'s League. Iscriviti su http://eeldasleague.it'}    
     return to_return,code
@@ -55,6 +57,7 @@ def vgceelda(options):
     user = options['user']
     user_data = get_user_data(user)
     to_return,code = is_user_eelda(user_data)
+    response=''
     if not user_data['gym']:
         for mon in team:
             if mon.species not in user_data['ou'] or mon.species not in user_data['vgc']:
@@ -71,6 +74,7 @@ def oueelda(options):
     user = options['user']
     user_data = get_user_data(user)
     to_return,code = is_user_eelda(user_data)
+    response=''
     if not user_data['gym']:
         for mon in team:
             if mon.species not in user_data['ou']:
