@@ -44,6 +44,7 @@ class Pokemon:
         command = "grep -n '"+self.species+":' -A 5 ../pokemon-showdown/data/pokedex.ts | grep \"types\""    
         types = subprocess.check_output(command, shell=True).decode('utf-8')
         self.types = re.search('\[(.*?)\]',types).group(1).replace('"','').lower().split(',')
+        self.types = [a.strip() for a in self.types]
         
         
 

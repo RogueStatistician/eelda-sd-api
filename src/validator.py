@@ -12,7 +12,12 @@ import requests
 
 
 def handler(name,options):
-    return dispatcher[name](options)
+    if dispatcher.get(name,False):
+        to_return,code = dispatcher[name](options)
+    else:
+        code = 200
+        to_return = {'message':'ok'}
+    return to_return,code
 
 def get_user_data(user):
     user_data = requests.get(
