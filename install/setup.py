@@ -11,15 +11,16 @@ def main(argv):
 	except getopt.GetoptError:
 		print(usage)
 		sys.exit(2)
+	if not len(opts):
+		print('required argument -i missing')
+		print(usage)
+		sys.exit(2)
 	for opt,arg in opts:
 		if opt == '-h':
 			print(usage)
 			sys.exit()
 		elif opt in ('-p','--path'):
 			showdown_root = arg
-		else:
-			print('required argument -i missing')
-			print(usage)
 	installer_files = []
 	for path,subdirs,files in os.walk(os.path.join(basedir,'..','pokemon-showdown')):
 		for name in files:
