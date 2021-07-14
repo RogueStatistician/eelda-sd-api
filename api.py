@@ -25,21 +25,24 @@ def user(user):
     # Create an empty list for our results
     results = dict()
     ladders = read_data()
-    print(ladders)
-    ladders = ladders.groupby('Username')
-    for name, group in ladders:
-        if user is not None and user != name:
-            continue
-        results[name] = group.drop('Username', axis=1).\
-            set_index('FormatID').to_dict('index')
-        results[name] = [{key: results[name][key]} for key in results[name]]
-    to_return = dict()
-    to_return['timestamp'] = datetime.datetime.now()
-    if(user is not None):
-        to_return.update(results)
-    else:
-        to_return['Users'] = [{key: results[key]} for key in results]
-    return jsonify(to_return)
+    to_return = {'message':'Ladder files not found'}
+    code = 404
+    if ladders:
+        code = 200
+        ladders = ladders.groupby('Username')
+        for name, group in ladders:
+            if user is not None and user != name:
+                continue
+            results[name] = group.drop('Username', axis=1).\
+                set_index('FormatID').to_dict('index')
+            results[name] = [{key: results[name][key]} for key in results[name]]
+        to_return = dict()
+        to_return['timestamp'] = datetime.datetime.now()
+        if(user is not None):
+            to_return.update(results)
+        else:
+            to_return['Users'] = [{key: results[key]} for key in results]
+    return jsonify(to_return),code
 
 
 @app.route('/ladders/', defaults={'ladder': None})
@@ -48,19 +51,23 @@ def ladders(ladder):
     results = dict()
     ladders = read_data()
     ladders = ladders.groupby('FormatID')
-    for name, group in ladders:
-        if ladder is not None and ladder != name:
-            continue
-        results[name] = group.drop('FormatID', axis=1).\
-            set_index('Username').to_dict('index')
-        results[name] = [{key: results[name][key]} for key in results[name]]
-    to_return = dict()
-    to_return['timestamp'] = datetime.datetime.now()
-    if(ladder is not None):
-        to_return.update(results)
-    else:
-        to_return['Ladders'] = [{key: results[key]} for key in results]
-    return jsonify(to_return)
+    to_return = {'message':'Ladder files not found'}
+    code = 404
+    if ladders:
+        code = 200
+        for name, group in ladders:
+            if ladder is not None and ladder != name:
+                continue
+            results[name] = group.drop('FormatID', axis=1).\
+                set_index('Username').to_dict('index')
+            results[name] = [{key: results[name][key]} for key in results[name]]
+        to_return = dict()
+        to_return['timestamp'] = datetime.datetime.now()
+        if(ladder is not None):
+            to_return.update(results)
+        else:
+            to_return['Ladders'] = [{key: results[key]} for key in results]
+    return jsonify(to_return),code
 
 
 def read_data():
@@ -69,7 +76,10 @@ def read_data():
         formato = ntpath.basename(file).split('.')[0]
         ladders[formato] = pd.read_csv(file, sep='\t')
         ladders[formato]['FormatID'] = formato
-    return pd.concat(ladders)
+    if ladders:
+        return pd.concat(ladders)
+    else:
+        return None
 
 
 
@@ -83,6 +93,6 @@ def validate(user=None, game_format=None):
 
 if __name__ == '__main__':
     import logging
-    logging.basicConfig(filename='error.log',level=logging.DEBUG)
+    logging.basicConfig(filename='log/error.log',level=logging.DEBUG)
     app.run(host,port=port)
 
