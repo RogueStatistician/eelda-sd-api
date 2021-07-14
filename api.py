@@ -76,52 +76,6 @@ def read_data():
 
 @app.route('/validate/<user>/<game_format>', methods=['POST'])
 def validate(user=None, game_format=None):
-    '''
-    team = teamparser(json.loads(request.data)['team'])
-    code = 200
-    user_data = requests.get(
-        'https://eeldasleague.it/wp-json/eelda/v1/trainer/'+user)
-    user_data = user_data.json()
-    print(user_data)
-    print(team)
-    response = ''
-    to_return = {'message': 'ok'}
-
-    if 'eelda' in game_format and (user_data['ou']==False or user_data['vgc']==False):
-        code = 403
-        to_return = {'message':'Utente '+user+' non partecipa alla Eelda\'s League. Iscriviti su http://eeldasleague.it'}
-    
-    elif user_data['gym'] and 'eelda' in game_format:
-        type = GymLeader().get(user_data['gym'][0])
-        for mon in team:
-            #print(type)
-            #print(mon.species)
-            #print(mon.types)
-            if type not in mon.types:
-                
-                response = response+mon.species +\
-                    u' non è del tipo della tua palestra.\n'
-                code = 403
-                to_return = {'message': response}      
-    elif game_format == 'gen8eeldasvgc2021series10':
-        valid_mons = []
-        valid_mons.extend(user_data['ou'])
-        valid_mons.extend(user_data['vgc'])
-        for mon in team:
-            if mon.species.replace(' ','-') not in [item.replace(' ','-') for item in valid_mons]:
-                response = response+mon.species +\
-                    ' non presente nella tua scheda allenatore.\n'
-                code = 403
-                to_return = {'message': response}
-    elif game_format == 'gen8eeldasou':
-        for mon in team:
-            if mon.species.replace(' ','-') not in [item.replace(' ','-') for item in user_data['ou']]:
-                response = response+mon.species +\
-                    ' non presente nel gruppo 1 della tua scheda allenatore.\n'
-                code = 403
-                to_return = {'message': response}
-    return jsonify(to_return), code
-    '''
     options = json.loads(request.data)
     options['user']=user
     return validator.handler(game_format,options)
