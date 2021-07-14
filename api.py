@@ -25,6 +25,7 @@ def user(user):
     # Create an empty list for our results
     results = dict()
     ladders = read_data()
+    print(ladders)
     ladders = ladders.groupby('Username')
     for name, group in ladders:
         if user is not None and user != name:
