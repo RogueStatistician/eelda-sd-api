@@ -29,7 +29,7 @@ def main(argv):
 
 	print('+--------------------------------------------+')
 	print('|   Eelda\'s League Showdown Customization   |')
- 	print('+--------------------------------------------+')
+	print('+--------------------------------------------+')
 	print('Copying custom files to pokemon-showdown')
 	for file in installer_files:
 		path_to_file = file.split('../pokemon-showdown/')[1]
