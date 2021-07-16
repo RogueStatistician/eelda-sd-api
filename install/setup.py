@@ -2,6 +2,7 @@ import os
 import sys, getopt
 import shutil
 import sqlite3
+import hjson
 
 def main(argv):
 	usage = 'setup.py -p <path-to-pokemon-showdown>'
@@ -13,7 +14,7 @@ def main(argv):
 		print(usage)
 		sys.exit(2)
 	if not len(opts):
-		print('required argument -i missing')
+		print('required argument -p missing')
 		print(usage)
 		sys.exit(2)
 	for opt,arg in opts:
@@ -30,14 +31,32 @@ def main(argv):
 	print('+--------------------------------------------+')
 	print('|   Eelda\'s League Showdown Customization   |')
 	print('+--------------------------------------------+')
-	print('Copying custom files to pokemon-showdown')
+	print('\n### Copying custom files to pokemon-showdown ###\n')
 	for file in installer_files:
 		path_to_file = file.split('../pokemon-showdown/')[1]
 		print(path_to_file)
 		os.rename(os.path.join(showdown_root,path_to_file),os.path.join(showdown_root,path_to_file)+'.old')
 		shutil.copy(file,os.path.join(showdown_root,path_to_file))
-	print('Database creation')
+	print('\n### Database creation ###\n')
 	db = sqlite3.connect(os.path.join(basedir,'..','db','showdown.db'))
+	dex = open(os.path.join(showdown_root,'data','pokedex.ts'),'r')
+	dex = '{\n'+''.join(dex.readlines()[1:-1])+'}'
+	dex_db = hjson.loads(dex)
+	cursor = db.cursor()
+	keys = set()
+	for key in dex_db:
+		keys.update(list(dex_db[key].keys()))
+	create_query = "create table if not exists pokedex ({0})".format(" text,".join(keys))
+	cursor.execute(create_query)
+	columns = ', '.join(keys)
+	placeholders = ':'+', :'.join(keys)
+	query = 'INSERT INTO pokedex (%s) VALUES (%s)' % (columns, placeholders)
+	for key in dex_db:
+		tmp = dict.fromkeys(keys)
+		tmp.update(dex_db[key])
+		
+		cursor.execute(query, tmp)
+	db.commit()
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
