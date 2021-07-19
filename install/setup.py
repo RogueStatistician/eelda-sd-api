@@ -80,11 +80,11 @@ def build_db(showdown_root,basedir):
 	abilities = list(filter(None,abilities))
 	egg_groups = list(filter(None,egg_groups))
 	types = list(filter(None,types))
-	print('\nBuilding Abilities Table\n')
+	print('\nPopulating Abilities Table')
 	cursor.executemany('INSERT INTO abilities (ability) VALUES (?)',[(a,) for a in abilities])
-	print('\nBuilding Egg Groups Table\n')
+	print('\nPopulating Egg Groups Table')
 	cursor.executemany('INSERT INTO egg_groups (egg_group) VALUES (?)', [(a,) for a in egg_groups])
-	print('\nBuinding Types Table\n')
+	print('\nPopulating Types Table')
 	cursor.executemany('INSERT INTO types (type) VALUES (?)',[(a,) for a in types])
 	db.commit()
 	mons = list()
@@ -115,23 +115,6 @@ def build_db(showdown_root,basedir):
 	print('\nPopulating of Pokedex table\n')
 	cursor.executemany('INSERT INTO pokedex VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',mons)
 	db.commit()
-	# create_query = "create table if not exists pokedex ({0})".format(" text,".join(keys))
-	# cursor.execute(create_query)
-	# columns = ', '.join(keys)
-	# placeholders = ':'+', :'.join(keys)
-	# query = 'INSERT INTO pokedex (%s) VALUES (%s)' % (columns, placeholders)
-	# for key in dex_db:
-	# 	tmp = dict.fromkeys(keys)
-	# 	tmp.update(dex_db[key])
-	# 	print(key)
-	# 	for key in tmp:
-	# 		if isinstance(tmp[key],OrderedDict):
-	# 			tmp[key]=str(dict(tmp[key]))
-	# 		if isinstance(tmp[key],list):
-	# 			tmp[key]=str(tmp[key])
-	# 		#print(key+' '+str(type(tmp[key])))
-	# 	cursor.execute(query, tmp)
-	# db.commit()
 
 def main(argv):
 	usage = 'setup.py -p <path-to-pokemon-showdown>'
@@ -156,10 +139,15 @@ def main(argv):
 	for path,subdirs,files in os.walk(os.path.join(basedir,'..','pokemon-showdown')):
 		for name in files:
 			installer_files.append(os.path.join(path,name))
-
-	print('+--------------------------------------------+')
-	print('|   Eelda\'s League Showdown Customization   |')
-	print('+--------------------------------------------+')
+	print(' ______     _     _       _       _                                 ')
+	print('|  ____|   | |   | |     ( )     | |                                ')
+	print('| |__   ___| | __| | __ _|/ ___  | |     ___  __ _  __ _ _   _  ___ ')
+	print('|  __| / _ \\ |/ _` |/ _` | / __| | |    / _ \\/ _` |/ _` | | | |/ _ \\')
+	print('| |___|  __/ | (_| | (_| | \__ \ | |___|  __/ (_| | (_| | |_| |  __/')
+	print('|______\___|_|\__,_|\__,_| |___/ |______\___|\__,_|\__, |\__,_|\___|')
+	print('                                                    __/ |           ')
+	print('                                                   |___/            ')
+	print(' Pokemon Showdown Customization ')
 	print('\n### Copying custom files to pokemon-showdown ###\n')
 	for file in installer_files:
 		path_to_file = file.split('../pokemon-showdown/')[1]
