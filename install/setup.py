@@ -60,16 +60,29 @@ def build_db(showdown_root,basedir):
 			 FOREIGN KEY(egg_group_2) REFERENCES egg_groups(ID)
 			)
 			'''
+	weakness_table = '''
+			CREATE TABLE IF NOT EXISTS weakness
+			(
+			 defending INTEGER NOT NULL,
+			 attacking INTEGER NOT NULL,
+			 damage REAL,
+			 PRIMARY KEY(defending,attacking)
+			)
+			'''
 	db = sqlite3.connect(os.path.join(basedir,'..','db','showdown.db'))
 	dex = open(os.path.join(showdown_root,'data','pokedex.ts'),'r')
 	dex = '{\n'+''.join(dex.readlines()[1:-1])+'}'
 	dex_db = hjson.loads(dex)
+	weakness_chart = open(os.path.join(showdown_root,'data','typechart.ts'))
+	weakness_chart = '{\n'+''.join(weakness_chart.readlines()[1:-1])+'}'
+	weakness_chart_db = hjson.loads(weakness_chart)
 	cursor = db.cursor()
 	cursor.execute('PRAGMA foreign_keys = ON')
 	cursor.execute(abilities_table)
 	cursor.execute(egg_group_table)
 	cursor.execute(types_table)
 	cursor.execute(pokedex_table)
+	cursor.execute(weakness_table)
 	abilities = set()
 	egg_groups = set()
 	types = set()
@@ -86,6 +99,24 @@ def build_db(showdown_root,basedir):
 	cursor.executemany('INSERT INTO egg_groups (egg_group) VALUES (?)', [(a,) for a in egg_groups])
 	print('\nPopulating Types Table')
 	cursor.executemany('INSERT INTO types (type) VALUES (?)',[(a,) for a in types])
+	weakness = list()
+	for key in weakness_chart_db:
+		defending = cursor.execute('SELECT ID FROM types WHERE lower(type)=lower(?)',(key,)).fetchone()[0]
+		damage_taken = weakness_chart_db[key]['damageTaken']
+		for atta in damage_taken:
+			attacking = cursor.execute('SELECT ID FROM types WHERE lower(type)=lower(?)',(atta,)).fetchone()
+			attacking = attacking[0] if attacking is not None else None
+			damage = 1
+			if damage_taken[atta] == 1:
+				damage = 2
+			elif damage_taken[atta] == 2:
+				damage = 0.5
+			elif damage_taken[atta] == 3:
+				damage = 0
+			if attacking is not None:
+				weakness.append((defending,attacking,damage,))
+	print('\nPopulating Weakness table')
+	cursor.executemany('INSERT INTO weakness VALUES (?,?,?)',weakness)
 	db.commit()
 	mons = list()
 	for key in dex_db:
