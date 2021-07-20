@@ -72,7 +72,7 @@ def build_db(showdown_root,basedir):
 		        (
 			 num INTEGER,
 			 name TEXT,
-			 nicename TEXT,
+			 nicename TEXT PRIMARY KEY,
 			 type_1 INTEGER,
 			 type_2 INTEGER,
 			 HP INTEGER,
@@ -90,7 +90,6 @@ def build_db(showdown_root,basedir):
 			 egg_group_1 INTEGER,
 			 egg_group_2 INTEGER,
 			 can_gigantamax TEXT,
-			 PRIMARY KEY(num,nicename),
 			 FOREIGN KEY(type_1) REFERENCES types(ID),
 			 FOREIGN KEY(type_2) REFERENCES types(ID),
 			 FOREIGN KEY(ability_1) REFERENCES abilities(ID),
@@ -112,8 +111,8 @@ def build_db(showdown_root,basedir):
 	movedex_table = '''
 			CREATE TABLE IF NOT EXISTS movedex
 			(
-				num INTEGER PRIMARY KEY,
-				nicename TEXT,
+				num INTEGER,
+				nicename TEXT PRIMARY KEY,
 				name TEXT,
 				accuracy REAL,
 				base_power REAL,
@@ -136,6 +135,7 @@ def build_db(showdown_root,basedir):
 	cursor.execute(types_table)
 	cursor.execute(pokedex_table)
 	cursor.execute(weakness_table)
+	cursor.execute(movedex_table)
 	abilities = set()
 	egg_groups = set()
 	types = set()
@@ -183,10 +183,10 @@ def build_db(showdown_root,basedir):
 		priority = move['priority']
 		type_ = cursor.execute('SELECT ID FROM types WHERE lower(type)=lower(?)',(move['type'],)).fetchone()
 		type_ = type_[0] if type_ is not None else '???'
-		contest_type = move['contestType']
+		contest_type = move.get('contestType',None)
 		moves.append((num,nicename,name,accuracy,base_power,category,pp,priority,type_,contest_type,))
 	print('\nPopulating Movedex table')
-	cursor.executemany('INSERT INTO movedex VALUES (?,?,?,?,?,?,?,?,?,?)',weakness)
+	cursor.executemany('INSERT INTO movedex VALUES (?,?,?,?,?,?,?,?,?,?)',moves)
 
 	db.commit()
 	mons = list()
