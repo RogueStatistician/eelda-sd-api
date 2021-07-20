@@ -43,7 +43,6 @@ def read_movedex(showdown_root):
 		del moves[i]
 	moves = '{\n'+''.join(moves)+'}'
 	moves_db = hjson.loads(moves)
-	print(moves_db['flamethrower'])
 	return moves_db
 
 def build_db(showdown_root,basedir):
@@ -110,6 +109,22 @@ def build_db(showdown_root,basedir):
 			 PRIMARY KEY(defending,attacking)
 			)
 			'''
+	movedex_table = '''
+			CREATE TABLE IF NOT EXISTS movedex
+			(
+				num INTEGER PRIMARY KEY,
+				nicename TEXT,
+				name TEXT,
+				accuracy REAL,
+				base_power REAL,
+				category TEXT,
+				pp INTEGER,
+				priority INTEGER,
+				type INTEGER,
+				contest_type TEXT,
+				FOREIGN KEY(type) REFERENCES types(ID)
+			)
+			'''
 	db = sqlite3.connect(os.path.join(basedir,'..','db','showdown.db'))
 	dex_db = read_dex(showdown_root)
 	weakness_chart_db = read_weak(showdown_root)
@@ -155,6 +170,24 @@ def build_db(showdown_root,basedir):
 				weakness.append((defending,attacking,damage,))
 	print('\nPopulating Weakness table')
 	cursor.executemany('INSERT INTO weakness VALUES (?,?,?)',weakness)
+	moves = list()
+	for key in moves_db:
+		move = moves_db[key]
+		num = move['num']
+		nicename = key
+		name = move['name']
+		accuracy = move['accuracy']
+		base_power = move['basePower']
+		category = move['category']
+		pp = move['pp']
+		priority = move['priority']
+		type_ = cursor.execute('SELECT ID FROM types WHERE lower(type)=lower(?)',(move['type'],)).fetchone()
+		type_ = type_[0] if type_ is not None else '???'
+		contest_type = move['contestType']
+		moves.append((num,nicename,name,accuracy,base_power,category,pp,priority,type_,contest_type,))
+	print('\nPopulating Movedex table')
+	cursor.executemany('INSERT INTO movedex VALUES (?,?,?,?,?,?,?,?,?,?)',weakness)
+
 	db.commit()
 	mons = list()
 	for key in dex_db:
