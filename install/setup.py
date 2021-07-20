@@ -4,6 +4,7 @@ import shutil
 import sqlite3
 import hjson
 from collections import OrderedDict
+import re
 
 def read_dex(showdown_root):
 	dex = open(os.path.join(showdown_root,'data','pokedex.ts'),'r')
@@ -20,7 +21,7 @@ def read_weak(showdown_root):
 
 def read_movedex(showdown_root):
 	moves = open(os.path.join(showdown_root,'data','moves.ts'),'r')
-	moves = moves.readlines()[29:-1])
+	moves = moves.readlines()[29:-1]
 	pattern_start = re.compile(r'\t*[a-zA-Z]+\s*\(')
 	pattern_end = re.compile(r'.*\},')
 	start_ = False
@@ -35,7 +36,12 @@ def read_movedex(showdown_root):
 				start_ = False
 
 	for i in sorted(to_remove,reverse=True):
-		del moves[-i]
+		del moves[i]
+	for i in range(700,len(moves)):
+		print(str(i)+' '+moves[i])
+		if i>900:
+			break
+	moves = '{\n'+''.join(moves)+'}'
 	moves_db = hjson.loads(moves)
 	return moves_db
 
