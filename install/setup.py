@@ -5,6 +5,40 @@ import sqlite3
 import hjson
 from collections import OrderedDict
 
+def read_dex(showdown_root):
+	dex = open(os.path.join(showdown_root,'data','pokedex.ts'),'r')
+	dex = '{\n'+''.join(dex.readlines()[1:-1])+'}'
+	dex_db = hjson.loads(dex)
+	return dex_db
+
+
+def read_weak(showdown_root):
+	dex = open(os.path.join(showdown_root,'data','typechart.ts'),'r')
+	dex = '{\n'+''.join(dex.readlines()[1:-1])+'}'
+	dex_db = hjson.loads(dex)
+	return dex_db
+
+def read_movedex(showdown_root):
+	moves = open(os.path.join(showdown_root,'data','moves.ts'),'r')
+	moves = moves.readlines()[29:-1])
+	pattern_start = re.compile(r'\t*[a-zA-Z]+\s*\(')
+	pattern_end = re.compile(r'.*\},')
+	start_ = False
+	to_remove = list()
+	for i in range(1,len(moves)):
+		if not start_ :
+			if pattern_start.match(moves[i]):
+				start_ = True
+		if start_ :
+			to_remove.append(i)
+			if pattern_end.match(moves[i]):
+				start_ = False
+
+	for i in sorted(to_remove,reverse=True):
+		del moves[-i]
+	moves_db = hjson.loads(moves)
+	return moves_db
+
 def build_db(showdown_root,basedir):
 	abilities_table = '''
 			  CREATE TABLE IF NOT EXISTS abilities 
@@ -70,12 +104,10 @@ def build_db(showdown_root,basedir):
 			)
 			'''
 	db = sqlite3.connect(os.path.join(basedir,'..','db','showdown.db'))
-	dex = open(os.path.join(showdown_root,'data','pokedex.ts'),'r')
-	dex = '{\n'+''.join(dex.readlines()[1:-1])+'}'
-	dex_db = hjson.loads(dex)
-	weakness_chart = open(os.path.join(showdown_root,'data','typechart.ts'))
-	weakness_chart = '{\n'+''.join(weakness_chart.readlines()[1:-1])+'}'
-	weakness_chart_db = hjson.loads(weakness_chart)
+	dex_db = read_dex(showdown_root)
+	weakness_chart_db = read_weak(showdown_root)
+	moves_db = read_movedex(showdown_root)
+	print(moves_db)
 	cursor = db.cursor()
 	cursor.execute('PRAGMA foreign_keys = ON')
 	cursor.execute(abilities_table)
