@@ -25,6 +25,7 @@ def read_movedex(showdown_root):
 	pattern_start = re.compile(r'\t*[a-zA-Z]+\s*\(')
 	pattern_end = re.compile(r'.*\},')
 	start_ = False
+	open_bracket = 0
 	to_remove = list()
 	for i in range(1,len(moves)):
 		if not start_ :
@@ -32,15 +33,15 @@ def read_movedex(showdown_root):
 				start_ = True
 		if start_ :
 			to_remove.append(i)
-			if pattern_end.match(moves[i]):
+			if '\{' in moves[i]:
+				open_bracket = open_bracket+1
+			if '\}' in moves[i]:
+				open_bracket = open_bracket-1
+			if pattern_end.match(moves[i]) and open_bracket == 0:
 				start_ = False
-
 	for i in sorted(to_remove,reverse=True):
 		del moves[i]
-	for i in range(700,len(moves)):
-		print(str(i)+' '+moves[i])
-		if i>900:
-			break
+
 	moves = '{\n'+''.join(moves)+'}'
 	moves_db = hjson.loads(moves)
 	return moves_db
