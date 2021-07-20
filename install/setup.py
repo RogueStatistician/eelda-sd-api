@@ -33,17 +33,17 @@ def read_movedex(showdown_root):
 				start_ = True
 		if start_ :
 			to_remove.append(i)
-			if '\{' in moves[i]:
+			if '{' in moves[i]:
 				open_bracket = open_bracket+1
-			if '\}' in moves[i]:
+			if '}' in moves[i]:
 				open_bracket = open_bracket-1
 			if pattern_end.match(moves[i]) and open_bracket == 0:
 				start_ = False
 	for i in sorted(to_remove,reverse=True):
 		del moves[i]
-
 	moves = '{\n'+''.join(moves)+'}'
 	moves_db = hjson.loads(moves)
+	print(moves_db['flamethrower'])
 	return moves_db
 
 def build_db(showdown_root,basedir):
@@ -114,7 +114,6 @@ def build_db(showdown_root,basedir):
 	dex_db = read_dex(showdown_root)
 	weakness_chart_db = read_weak(showdown_root)
 	moves_db = read_movedex(showdown_root)
-	print(moves_db)
 	cursor = db.cursor()
 	cursor.execute('PRAGMA foreign_keys = ON')
 	cursor.execute(abilities_table)
