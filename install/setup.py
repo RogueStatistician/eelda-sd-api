@@ -6,18 +6,23 @@ import hjson
 from collections import OrderedDict
 import re
 
-def read_dex(showdown_root):
-	dex = open(os.path.join(showdown_root,'data','pokedex.ts'),'r')
+def read_table(showdown_root,name):
+	dex = open(os.path.join(showdown_root,'data',name+'.ts'),'r')
 	dex = '{\n'+''.join(dex.readlines()[1:-1])+'}'
 	dex_db = hjson.loads(dex)
 	return dex_db
 
+# def read_dex(showdown_root):
+# 	dex = open(os.path.join(showdown_root,'data','pokedex.ts'),'r')
+# 	dex = '{\n'+''.join(dex.readlines()[1:-1])+'}'
+# 	dex_db = hjson.loads(dex)
+# 	return dex_db
 
-def read_weak(showdown_root):
-	dex = open(os.path.join(showdown_root,'data','typechart.ts'),'r')
-	dex = '{\n'+''.join(dex.readlines()[1:-1])+'}'
-	dex_db = hjson.loads(dex)
-	return dex_db
+# def read_weak(showdown_root):
+# 	dex = open(os.path.join(showdown_root,'data','typechart.ts'),'r')
+# 	dex = '{\n'+''.join(dex.readlines()[1:-1])+'}'
+# 	dex_db = hjson.loads(dex)
+# 	return dex_db
 
 def read_movedex(showdown_root):
 	moves = open(os.path.join(showdown_root,'data','moves.ts'),'r')
@@ -124,10 +129,20 @@ def build_db(showdown_root,basedir):
 				FOREIGN KEY(type) REFERENCES types(ID)
 			)
 			'''
+	natures_table = '''
+					CREATE TABLE IF NOT EXISTS natures
+					(
+						ID INTEGER PRIMARY KEY AUTOINCREMENT,
+						nature TEXT,
+						plus TEXT,
+						minus TEXT
+					)
+					'''
 	db = sqlite3.connect(os.path.join(basedir,'..','db','showdown.db'))
-	dex_db = read_dex(showdown_root)
-	weakness_chart_db = read_weak(showdown_root)
+	dex_db = read_table(showdown_root,'pokedex')
+	weakness_chart_db = read_table(showdown_root,'typechart')
 	moves_db = read_movedex(showdown_root)
+	natures_db = read_table(showdown_root,'moves')
 	cursor = db.cursor()
 	cursor.execute('PRAGMA foreign_keys = ON')
 	cursor.execute(abilities_table)
@@ -146,12 +161,19 @@ def build_db(showdown_root,basedir):
 	abilities = list(filter(None,abilities))
 	egg_groups = list(filter(None,egg_groups))
 	types = list(filter(None,types))
+	natures = list()
+	for nature in natures_db:
+		plus = natures_db[nature].get('plus',None)
+		minus = natures_db[nature].get('minus',None)
+		natures.append((nature,plus,minus,))
 	print('\nPopulating Abilities Table')
 	cursor.executemany('INSERT INTO abilities (ability) VALUES (?)',[(a,) for a in abilities])
 	print('\nPopulating Egg Groups Table')
 	cursor.executemany('INSERT INTO egg_groups (egg_group) VALUES (?)', [(a,) for a in egg_groups])
 	print('\nPopulating Types Table')
 	cursor.executemany('INSERT INTO types (type) VALUES (?)',[(a,) for a in types])
+	print('\nPopulating Natures Table')
+	cursor.executemany('INSERT INTO natures (type) VALUES (?,?,?)',natures)
 	weakness = list()
 	for key in weakness_chart_db:
 		defending = cursor.execute('SELECT ID FROM types WHERE lower(type)=lower(?)',(key,)).fetchone()[0]
