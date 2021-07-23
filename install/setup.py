@@ -12,17 +12,11 @@ def read_table(showdown_root,name):
 	dex_db = hjson.loads(dex)
 	return dex_db
 
-# def read_dex(showdown_root):
-# 	dex = open(os.path.join(showdown_root,'data','pokedex.ts'),'r')
-# 	dex = '{\n'+''.join(dex.readlines()[1:-1])+'}'
-# 	dex_db = hjson.loads(dex)
-# 	return dex_db
-
-# def read_weak(showdown_root):
-# 	dex = open(os.path.join(showdown_root,'data','typechart.ts'),'r')
-# 	dex = '{\n'+''.join(dex.readlines()[1:-1])+'}'
-# 	dex_db = hjson.loads(dex)
-# 	return dex_db
+def read_learnset(showdown_root):
+	dex = open(os.path.join(showdown_root,'data','learnsets.ts'),'r')
+	dex = '{\n'+''.join(dex.readlines()[3:-1])+'}'
+	dex_db = hjson.loads(dex)
+	return dex_db
 
 def read_movedex(showdown_root):
 	moves = open(os.path.join(showdown_root,'data','moves.ts'),'r')
@@ -130,19 +124,41 @@ def build_db(showdown_root,basedir):
 			)
 			'''
 	natures_table = '''
-					CREATE TABLE IF NOT EXISTS natures
-					(
-						ID INTEGER PRIMARY KEY AUTOINCREMENT,
-						nature TEXT,
-						plus TEXT,
-						minus TEXT
-					)
-					'''
+			CREATE TABLE IF NOT EXISTS natures
+			(
+				ID INTEGER PRIMARY KEY AUTOINCREMENT,
+				nature TEXT,
+				plus TEXT,
+				minus TEXT
+			)
+			'''
+	alternative_forms_table = '''
+				  CREATE TABLE IF NOT EXISTS alternative_formes
+				  (
+				   base TEXT,
+				   alternative TEXT,
+				   FOREIGN KEY(base) REFERENCES pokedex(nicename),
+				   FOREIGN KEY(alternative) REFERENCES pokedex(nicename)
+				  )
+				  '''
+	learnset_table = '''
+			 CREATE TABLE IF NOT EXISTS learnsets
+			 (
+			  pokemon TEXT,
+			  move TEXT,
+			  gen INTEGER,
+			  learn_type TEXT,
+		  	  learn_level INTEGER,
+			  FOREIGN KEY(pokemon) REFERENCES pokedex(nicename),
+			  FOREIGN KEY(move) REFERENCES movedex(nicename)
+			 )
+			 '''
 	db = sqlite3.connect(os.path.join(basedir,'..','db','showdown.db'))
 	dex_db = read_table(showdown_root,'pokedex')
 	weakness_chart_db = read_table(showdown_root,'typechart')
 	moves_db = read_movedex(showdown_root)
-	natures_db = read_table(showdown_root,'moves')
+	natures_db = read_table(showdown_root,'natures')
+	learnset_db = read_learnset(showdown_root)
 	cursor = db.cursor()
 	cursor.execute('PRAGMA foreign_keys = ON')
 	cursor.execute(abilities_table)
@@ -151,6 +167,9 @@ def build_db(showdown_root,basedir):
 	cursor.execute(pokedex_table)
 	cursor.execute(weakness_table)
 	cursor.execute(movedex_table)
+	cursor.execute(natures_table)
+	cursor.execute(alternative_forms_table)
+	cursor.execute(learnset_table)
 	abilities = set()
 	egg_groups = set()
 	types = set()
@@ -173,7 +192,7 @@ def build_db(showdown_root,basedir):
 	print('\nPopulating Types Table')
 	cursor.executemany('INSERT INTO types (type) VALUES (?)',[(a,) for a in types])
 	print('\nPopulating Natures Table')
-	cursor.executemany('INSERT INTO natures (type) VALUES (?,?,?)',natures)
+	cursor.executemany('INSERT INTO natures (nature,plus,minus) VALUES (?,?,?)',natures)
 	weakness = list()
 	for key in weakness_chart_db:
 		defending = cursor.execute('SELECT ID FROM types WHERE lower(type)=lower(?)',(key,)).fetchone()[0]
@@ -209,9 +228,9 @@ def build_db(showdown_root,basedir):
 		moves.append((num,nicename,name,accuracy,base_power,category,pp,priority,type_,contest_type,))
 	print('\nPopulating Movedex table')
 	cursor.executemany('INSERT INTO movedex VALUES (?,?,?,?,?,?,?,?,?,?)',moves)
-
 	db.commit()
 	mons = list()
+	alternatives = list()
 	for key in dex_db:
 		mon = dex_db[key]
 		num = mon['num']
@@ -235,9 +254,38 @@ def build_db(showdown_root,basedir):
 		egg_group_1 = cursor.execute('SELECT ID FROM egg_groups WHERE egg_group=?',(mon['eggGroups'][0],)).fetchone()[0]
 		egg_group_2 = None if len(mon['eggGroups'])<2 else cursor.execute('SELECT ID FROM egg_groups WHERE egg_group=?',(mon['eggGroups'][1],)).fetchone()[0]
 		can_gigantamax = mon.get('canGigantamax',None)
+		if mon.get('otherFormes',False):
+			for form in mon['otherFormes']:
+				alternatives.append((key,form,))
 		mons.append((num,name,nicename,type_1,type_2,HP,ATK,DEF,SPA,SPD,SPE,ability_1,ability_2,ability_h,heightm,weightkg,color,egg_group_1,egg_group_2,can_gigantamax,))
 	print('\nPopulating of Pokedex table\n')
 	cursor.executemany('INSERT INTO pokedex VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',mons)
+	db.commit()
+	for i in range(1,len(alternatives)):
+		key,form = alternatives[i]
+		form = cursor.execute('SELECT nicename FROM pokedex WHERE name=?',(form,)).fetchone()[0]
+		alternatives[i] = (key,form,)
+		cursor.execute('INSERT INTO alternative_formes VALUES (?,?)',alternatives[i])
+	db.commit()
+	learn_type = {
+		'M':'TM/HM',
+		'E':'Eggmove',
+		'T':'Tutor',
+		'S':'Event',
+		'L':'Level'
+		}
+	for key in learnset_db:
+		pokemon = key
+		if not cursor.execute('SELECT COUNT(*) FROM pokedex WHERE nicename=?',(pokemon,)).fetchone()[0]:
+			continue
+		learnset = learnset_db[key].get('learnset',None)
+		if learnset is not None:
+			for move in learnset:
+				for gens in learnset[move]:
+					gen = gens[0]
+					learnt = learn_type.get(gens[1],'Other')
+					level = gens[2:] if gens[1]=='L' else None
+					cursor.execute('INSERT INTO learnsets VALUES (?,?,?,?,?)',(pokemon,move,gen,learnt,level,))
 	db.commit()
 
 def main(argv):
