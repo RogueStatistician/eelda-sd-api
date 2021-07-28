@@ -1,5 +1,5 @@
 *.log
 *.pyc
 env/
-db/
+db/*
 *.save

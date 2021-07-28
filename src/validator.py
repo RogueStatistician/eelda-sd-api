@@ -87,7 +87,7 @@ def oueelda(options):
         if not user_data['gym']:
             for mon in team:
                 if mon.species not in user_data['ou']:
-		    if user_data['pearl']=="1" and [a in user_data['ou'] or a in user_data['vgc'] for a in mon.alternatives]:
+                    if user_data['pearl']=="1" and [a in user_data['ou'] for a in mon.alternatives]:
                         continue
                     response = response+mon.name +\
                      	' non presente nel gruppo 1 della tua scheda allenatore.\n'
