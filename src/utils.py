@@ -27,9 +27,9 @@ class Pokemon:
     types = None
     alternatives = None
     def __init__(self, mon):
-	db = sqlite3.connect('../db/showdown.db')
+        db = sqlite3.connect('../db/showdown.db')
         cur = db.cursor()
-	values = mon.split('|')
+        values = mon.split('|')
         self.name = values[0]
         self.species = values[1] if not values[1] == '' else values[0].replace(' ','').replace('-','').lower()
         self.item = values[2]
@@ -47,8 +47,8 @@ class Pokemon:
             self.happiness
         command = "grep -n '"+self.species+":' -A 5 ../pokemon-showdown/data/pokedex.ts | grep \"types\""    
         #types = subprocess.check_output(command, shell=True).decode('utf-8')
-	self.types = cur.execute('select type_1,type_2 from pokedex where nicename = ?',(self.species,)).fetchone()[0]
-	self.alternatives = cur.execute('select base from alternative_formes where alternative=? union select alternative from alternative_formes where base=?',(self.species,self.species,))
+        self.types = cur.execute('select type_1,type_2 from pokedex where nicename = ?',(self.species,)).fetchone()[0]
+        self.alternatives = cur.execute('select base from alternative_formes where alternative=? union select alternative from alternative_formes where base=?',(self.species,self.species,)).fetchone()[0]
         #self.types = re.search('\[(.*?)\]',types).group(1).replace('"','').lower().split(',')
         #self.types = [a.strip() for a in self.types]
         
