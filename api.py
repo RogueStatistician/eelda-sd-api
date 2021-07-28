@@ -16,6 +16,17 @@ port = 8081
 data = '../pokemon-showdown/config/ladders/'
 
 
+def read_data():
+    ladders = dict()
+    for file in glob.glob(data+"*.tsv"):
+        formato = ntpath.basename(file).split('.')[0]
+        ladders[formato] = pd.read_csv(file, sep='\t')
+        ladders[formato]['FormatID'] = formato
+    if ladders:
+        return pd.concat(ladders)
+    else:
+        return None
+
 @app.route('/users/', defaults={'user': None})
 @app.route('/users/<user>')
 def user(user):
@@ -27,7 +38,7 @@ def user(user):
     ladders = read_data()
     to_return = {'message':'Ladder files not found'}
     code = 404
-    if ladders:
+    if ladders is not None:
         code = 200
         ladders = ladders.groupby('Username')
         for name, group in ladders:
@@ -50,11 +61,11 @@ def user(user):
 def ladders(ladder):
     results = dict()
     ladders = read_data()
-    ladders = ladders.groupby('FormatID')
     to_return = {'message':'Ladder files not found'}
     code = 404
-    if ladders:
+    if ladders is not None:
         code = 200
+        ladders = ladders.groupby('FormatID')
         for name, group in ladders:
             if ladder is not None and ladder != name:
                 continue
@@ -70,16 +81,7 @@ def ladders(ladder):
     return jsonify(to_return),code
 
 
-def read_data():
-    ladders = dict()
-    for file in glob.glob(data+"*.tsv"):
-        formato = ntpath.basename(file).split('.')[0]
-        ladders[formato] = pd.read_csv(file, sep='\t')
-        ladders[formato]['FormatID'] = formato
-    if ladders:
-        return pd.concat(ladders)
-    else:
-        return None
+
 
 
 
