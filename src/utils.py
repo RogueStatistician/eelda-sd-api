@@ -8,6 +8,8 @@ import json
 import requests
 import subprocess
 import re
+import sqlite3
+
 
 class Pokemon:
     name = ''
@@ -22,10 +24,12 @@ class Pokemon:
     shiny = False
     level = 100
     happiness = 255
-    types = []
-
+    types = None
+    alternatives = None
     def __init__(self, mon):
-        values = mon.split('|')
+	db = sqlite3.connect('../db/showdown.db')
+        cur = db.cursor()
+	values = mon.split('|')
         self.name = values[0]
         self.species = values[1] if not values[1] == '' else values[0].replace(' ','').replace('-','').lower()
         self.item = values[2]
@@ -42,9 +46,11 @@ class Pokemon:
         self.happiness = int(values[11]) if values[11] != '' else \
             self.happiness
         command = "grep -n '"+self.species+":' -A 5 ../pokemon-showdown/data/pokedex.ts | grep \"types\""    
-        types = subprocess.check_output(command, shell=True).decode('utf-8')
-        self.types = re.search('\[(.*?)\]',types).group(1).replace('"','').lower().split(',')
-        self.types = [a.strip() for a in self.types]
+        #types = subprocess.check_output(command, shell=True).decode('utf-8')
+	self.types = cur.execute('select type_1,type_2 from pokedex where nicename = ?',(self.species,)).fetchone()[0]
+	self.alternatives = cur.execute('select base from alternative_formes where alternative=? union select alternative from alternative_formes where base=?',(self.species,self.species,))
+        #self.types = re.search('\[(.*?)\]',types).group(1).replace('"','').lower().split(',')
+        #self.types = [a.strip() for a in self.types]
         
         
 

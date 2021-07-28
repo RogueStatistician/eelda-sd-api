@@ -67,8 +67,10 @@ def vgceelda(options):
         if not user_data['gym']:
             for mon in team:
                 if mon.species not in user_data['ou'] and mon.species not in user_data['vgc']:
+                    if user_data['pearl']=="1" and [a in user_data['ou'] or a in user_data['vgc'] for a in mon.alternatives]:
+                        continue
                     response = response+mon.name +\
-                        ' non presente nella tua scheda allenatore.\n'
+                    ' non presente nella tua scheda allenatore.\n'
                     code = 403
                     to_return = {'message': response}
         else:
@@ -85,8 +87,10 @@ def oueelda(options):
         if not user_data['gym']:
             for mon in team:
                 if mon.species not in user_data['ou']:
+		    if user_data['pearl']=="1" and [a in user_data['ou'] or a in user_data['vgc'] for a in mon.alternatives]:
+                        continue
                     response = response+mon.name +\
-                        ' non presente nel gruppo 1 della tua scheda allenatore.\n'
+                     	' non presente nel gruppo 1 della tua scheda allenatore.\n'
                     code = 403
                     to_return = {'message': response}
         else:
